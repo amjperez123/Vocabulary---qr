@@ -1,257 +1,144 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vocabulary QR Dictionary</title>
-
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #f5f5f5;
-  margin: 0;
-  padding: 20px;
-  text-align: center;
-}
-
-.card {
-  max-width: 650px;
-  margin: auto;
-  background: white;
-  padding: 28px;
-  border-radius: 16px;
-  box-shadow: 0 2px 12px #ccc;
-}
-
-h1 {
-  font-size: 34px;
-}
-
-.word {
-  font-size: 48px;
-  font-weight: bold;
-  margin: 20px 0;
-}
-
-button {
-  padding: 12px 20px;
-  border: 0;
-  border-radius: 10px;
-  font-size: 18px;
-  cursor: pointer;
-}
-
-.definition {
-  margin-top: 25px;
-  font-size: 20px;
-}
-
-ul {
-  text-align: left;
-  columns: 2;
-  max-width: 650px;
-  margin: auto;
-}
-
-li {
-  margin: 8px 0;
-}
-
-a {
-  text-decoration: none;
-  color: #1565c0;
-}
+body{font-family:Arial,sans-serif;background:#f4f7fb;margin:0;padding:24px 16px;text-align:center;color:#222}
+.card{max-width:620px;margin:20px auto;background:white;padding:30px 22px;border-radius:18px;box-shadow:0 4px 18px rgba(0,0,0,.10)}
+h1{color:#1d4ed8}.word{font-size:42px;font-weight:bold;margin:20px 0;color:#111827}
+button{border:0;border-radius:12px;padding:13px 18px;margin:7px;font-size:17px;cursor:pointer}
+.listen{background:#dbeafe;color:#1e40af}.practice{background:#dcfce7;color:#166534}
+.check{background:#fef3c7;color:#92400e}.back{background:#e5e7eb;color:#374151}
+#status{min-height:28px;margin-top:15px;font-size:18px;font-weight:bold}
+#heard{margin-top:10px;color:#4b5563;font-size:17px}.note{margin-top:20px;font-size:13px;color:#6b7280;line-height:1.5}
+ul{text-align:left;max-width:500px;margin:20px auto;columns:2}li{margin:7px 0}
 </style>
 </head>
-
-<body>
-
-<div class="card" id="app"></div>
-
+<body><div class="card" id="app"></div>
 <script>
+const words = ["Traps", "Conflict", "Sad", "Alter", "Quickly", "Big", "Pair", "Lucky", "Authority", "Mandatory", "Fortunate", "Shelter", "Biology", "Population", "Pollution", "Extinct", "Summarize", "Central Idea", "Snares", "Blocked", "Wardrobes", "Tired", "Worried", "Excited", "Site", "Vocal", "Shiny", "Dreaded", "Dumbfounded", "Frightened", "Active", "Severe", "Happy", "Angry", "Brave", "Calm", "Clean", "Clever", "Danger", "Empty", "Famous", "Friend", "Honest", "Kind", "Large", "Little", "Strong", "Useful", "Answer", "Begin", "Choose", "Common", "Create", "Different", "Early", "Enough", "Important", "Learn", "Listen", "Message", "Notice", "Protect", "Remember", "Simple", "Travel", "Understand", "Arrange", "Attempt", "Benefit", "Compare", "Complete", "Discover", "Evidence", "Frequent", "Identify", "Increase", "Observe", "Require", "Accurate", "Complex", "Essential", "Significant", "Approach", "Consequence", "Demonstrate", "Interpret", "Phenomenon", "Sustainable", "Compassionate", "Extraordinary", "Unprecedented", "Adapt", "Analyze", "Clarify", "Cooperate", "Describe", "Determine", "Efficient", "Evaluate", "Generate"];
 
-const words = [
-"Traps",
-"Conflict",
-"Sad",
-"Alter",
-"Quickly",
-"Big",
-"Pair",
-"Lucky",
-"Authority",
-"Mandatory",
-"Fortunate",
-"Shelter",
-"Biology",
-"Population",
-"Pollution",
-"Extinct",
-"Summarize",
-"Central Idea",
-"Snares",
-"Blocked",
-"Wardrobes",
-"Tired",
-"Worried",
-"Excited",
-"Site",
-"Vocal",
-"Shiny",
-"Dreaded",
-"Dumbfounded",
-"Frightened",
-"Active",
-"Severe",
-"Happy",
-"Angry",
-"Brave",
-"Calm",
-"Clean",
-"Clever",
-"Danger",
-"Empty",
-"Famous",
-"Friend",
-"Honest",
-"Kind",
-"Large",
-"Little",
-"Strong",
-"Useful",
-"Answer",
-"Begin",
-"Choose",
-"Common",
-"Create",
-"Different",
-"Early",
-"Enough",
-"Important",
-"Learn",
-"Listen",
-"Message",
-"Notice",
-"Protect",
-"Remember",
-"Simple",
-"Travel",
-"Understand",
-"Arrange",
-"Attempt",
-"Benefit",
-"Compare",
-"Complete",
-"Discover",
-"Evidence",
-"Frequent",
-"Identify",
-"Increase",
-"Observe",
-"Require",
-"Accurate",
-"Complex",
-"Essential",
-"Significant",
-"Approach",
-"Consequence",
-"Demonstrate",
-"Interpret",
-"Phenomenon",
-"Sustainable",
-"Compassionate",
-"Extraordinary",
-"Unprecedented",
-"Adapt",
-"Analyze",
-"Clarify",
-"Cooperate",
-"Describe",
-"Determine",
-"Efficient",
-"Evaluate",
-"Generate"
-];
+function normalize(text){
+  return text.toLowerCase().replace(/[^a-z0-9 ]/g,"").replace(/\s+/g," ").trim();
+}
 
-const params = new URLSearchParams(window.location.search);
-const requested = params.get("word");
-
-const word = words.find(
-  w => w.toLowerCase() === (requested || "").toLowerCase()
-);
-
-function speak() {
-
-  const text = word || "";
-
-  const u = new SpeechSynthesisUtterance(text);
-
-  u.lang = "en-US";
-  u.rate = 0.85;
-
+function speak(text){
+  if(!("speechSynthesis" in window)){
+    alert("Sorry, your browser does not support pronunciation playback.");
+    return;
+  }
   speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="en-US";
+  u.rate=.8;
+  u.pitch=1;
   speechSynthesis.speak(u);
 }
 
-const app = document.getElementById("app");
+const params=new URLSearchParams(location.search);
+const requested=params.get("word");
+const target=requested ? words.find(w=>normalize(w)===normalize(requested)) : null;
+const app=document.getElementById("app");
 
-if (word) {
+if(!target){
+  app.innerHTML="<h1>📚 Vocabulary QR Dictionary</h1><p>Scan a QR code to practice a word.</p><ul>"+
+    words.map(w=>"<li>"+w+"</li>").join("")+"</ul>";
+}else{
+  app.innerHTML=`
+    <h1>📚 Vocabulary Practice</h1>
+    <div class="word">${target}</div>
+    <button class="listen" id="listenBtn">🔊 Listen</button>
+    <button class="practice" id="practiceBtn">🎤 Practice</button>
+    <button class="check" id="checkBtn">✅ Check Pronunciation</button>
+    <div id="status">Press 🎤 Practice and say the word.</div>
+    <div id="heard"></div>
+    <div class="note">Tip: Listen first, then say the word clearly.<br>
+    Your browser's speech recognition checks the word it hears. It is a practice tool, not a professional pronunciation assessment.</div>
+    <br><button class="back" id="backBtn">← Back to Word List</button>`;
 
-  document.title = word + " - Vocabulary QR Dictionary";
+  let recognizedText="";
+  let listening=false;
+  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const practiceBtn=document.getElementById("practiceBtn");
+  const checkBtn=document.getElementById("checkBtn");
+  const status=document.getElementById("status");
+  const heard=document.getElementById("heard");
+  let recognition=null;
 
-  app.innerHTML = `
-    <h1>Vocabulary QR Dictionary</h1>
+  document.getElementById("listenBtn").onclick=()=>speak(target);
+  document.getElementById("backBtn").onclick=()=>location.href=location.pathname;
 
-    <div class="word">${word}</div>
+  if(SpeechRecognition){
+    recognition=new SpeechRecognition();
+    recognition.lang="en-US";
+    recognition.interimResults=false;
+    recognition.maxAlternatives=3;
+    recognition.continuous=false;
 
-    <button onclick="speak()">
-      🔊 Pronounce
-    </button>
+    recognition.onstart=()=>{
+      listening=true;
+      status.textContent="🎤 Listening... Say the word now.";
+      heard.textContent="";
+      practiceBtn.textContent="🎤 Listening...";
+    };
 
-    <div class="definition">
+    recognition.onresult=(event)=>{
+      recognizedText=event.results[0][0].transcript;
+      heard.textContent="👂 I heard: "+recognizedText;
+      status.textContent="Now press ✅ Check Pronunciation.";
+    };
 
-      <p>
-        <b>Word:</b> ${word}
-      </p>
+    recognition.onerror=(event)=>{
+      listening=false;
+      practiceBtn.textContent="🎤 Practice";
+      if(event.error==="not-allowed"||event.error==="permission-denied")
+        status.textContent="⚠️ Please allow microphone access, then try again.";
+      else if(event.error==="no-speech")
+        status.textContent="🔇 I didn't hear anything. Please try again.";
+      else
+        status.textContent="⚠️ Something went wrong. Please try again.";
+    };
 
-      <p>
-        This QR code is specifically for
-        <b>${word}</b>.
-      </p>
+    recognition.onend=()=>{
+      listening=false;
+      practiceBtn.textContent="🎤 Practice";
+    };
+  }else{
+    practiceBtn.disabled=true;
+    checkBtn.disabled=true;
+    status.textContent="⚠️ Speech recognition is not supported here. Try Google Chrome on Android.";
+  }
 
-    </div>
-  `;
+  practiceBtn.onclick=()=>{
+    if(!recognition)return;
+    if(listening){
+      recognition.stop();
+      return;
+    }
+    recognizedText="";
+    heard.textContent="";
+    status.textContent="🎤 Starting microphone...";
+    try{
+      recognition.start();
+    }catch(e){
+      status.textContent="⚠️ Please wait a moment, then try again.";
+    }
+  };
 
-} else if (requested) {
-
-  app.innerHTML = `
-    <h1>Word Not Found</h1>
-
-    <p>
-      The requested word
-      "<b>${requested}</b>"
-      is not in the dictionary.
-    </p>
-  `;
-
-} else {
-
-  app.innerHTML = `
-    <h1>Vocabulary QR Dictionary</h1>
-
-    <p>Choose a word:</p>
-
-    <ul>
-      ${words.map(w =>
-        `<li>
-          <a href="?word=${encodeURIComponent(w)}">${w}</a>
-        </li>`
-      ).join("")}
-    </ul>
-  `;
+  checkBtn.onclick=()=>{
+    if(!recognizedText){
+      status.textContent="🎤 Please practice first, then check your pronunciation.";
+      return;
+    }
+    if(normalize(recognizedText)===normalize(target))
+      status.textContent="✅ Correct! Great job! 🎉";
+    else
+      status.textContent="❌ Not quite. Listen again and try saying it one more time.";
+  };
 }
-
 </script>
-
 </body>
 </html>
