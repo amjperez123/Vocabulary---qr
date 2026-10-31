@@ -122,18 +122,18 @@ function normalize(text) {
 
 function speak(text) {
   if (!("speechSynthesis" in window)) {
-    alert("Sorry, your browser does not support pronunciation playback.");
+    alert("Your browser does not support pronunciation playback.");
     return;
   }
 
   speechSynthesis.cancel();
 
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "en-US";
-  u.rate = 0.8;
-  u.pitch = 1;
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-US";
+  utterance.rate = 0.8;
+  utterance.pitch = 1;
 
-  speechSynthesis.speak(u);
+  speechSynthesis.speak(utterance);
 }
 
 const params = new URLSearchParams(location.search);
@@ -175,10 +175,9 @@ if (!target) {
     <div id="heard"></div>
 
     <div class="note">
-      Listen first, then practice saying the word.
-      Feedback appears automatically after the browser
-      recognizes your speech. If the result seems
-      incorrect, try again.
+      Listen first, then say the word clearly.
+      Feedback appears automatically when your browser
+      recognizes your speech. Tap Try Again to practice again.
     </div>
   `;
 
@@ -197,7 +196,7 @@ if (!target) {
 
   let recognition = null;
   let listening = false;
-  let receivedResult = false;
+  let feedbackShown = false;
 
   document.getElementById("listenBtn").onclick =
     () => speak(target);
@@ -207,21 +206,21 @@ if (!target) {
     practiceBtn.disabled = true;
 
     status.textContent =
-      "⚠️ Speech recognition is not supported in this browser. Please try Google Chrome.";
+      "⚠️ Speech recognition is not supported. Please try Google Chrome.";
 
   } else {
 
     recognition = new SpeechRecognition();
 
     recognition.lang = "en-US";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 3;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
     recognition.continuous = false;
 
     recognition.onstart = () => {
 
       listening = true;
-      receivedResult = false;
+      feedbackShown = false;
 
       heard.textContent = "";
 
@@ -236,33 +235,61 @@ if (!target) {
 
     recognition.onresult = (event) => {
 
-      receivedResult = true;
+      let finalTranscript = "";
+      let interimTranscript = "";
 
-      const alternatives = [];
-      const result = event.results[0];
+      for (let i = event.resultIndex; i < event.results.length; i++) {
 
-      for (let i = 0; i < result.length; i++) {
-        alternatives.push(result[i].transcript);
+        const transcript = event.results[i][0].transcript;
+
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      const currentTranscript =
+        finalTranscript || interimTranscript;
+
+      if (currentTranscript) {
+        heard.textContent =
+          "👂 I heard: " + currentTranscript;
       }
 
       const expected = normalize(target);
 
-      const matched = alternatives.some(
-        text => normalize(text) === expected
-      );
+      // Give early positive feedback when the
+      // browser recognizes the complete target word.
+      if (
+        interimTranscript &&
+        normalize(interimTranscript) === expected &&
+        !feedbackShown
+      ) {
 
-      heard.textContent =
-        "👂 I heard: " + alternatives[0];
-
-      if (matched) {
+        feedbackShown = true;
 
         status.textContent =
           "✅ Correct! Great job! 🎉";
 
-      } else {
+        return;
+      }
 
-        status.textContent =
-          "❌ Not quite. Try again! Listen to the word and practice once more.";
+      // Check the final recognized result.
+      if (finalTranscript && !feedbackShown) {
+
+        feedbackShown = true;
+
+        if (normalize(finalTranscript) === expected) {
+
+          status.textContent =
+            "✅ Correct! Great job! 🎉";
+
+        } else {
+
+          status.textContent =
+            "❌ Not quite. Try again! Listen to the word and practice once more.";
+        }
       }
     };
 
@@ -279,17 +306,17 @@ if (!target) {
       ) {
 
         status.textContent =
-          "⚠️ Please allow microphone access, then tap Practice again.";
+          "⚠️ Please allow microphone access and try again.";
 
       } else if (event.error === "no-speech") {
 
         status.textContent =
-          "🔇 I didn't hear anything. Tap Practice and try again.";
+          "🔇 I didn't hear anything. Please try again.";
 
       } else {
 
         status.textContent =
-          "⚠️ The microphone could not recognize your speech. Please try again.";
+          "⚠️ Recognition problem. Please try again.";
       }
     };
 
@@ -300,13 +327,18 @@ if (!target) {
       practiceBtn.disabled = false;
       practiceBtn.textContent = "🎤 Try Again";
 
-      if (
-        !receivedResult &&
-        status.textContent.includes("Listening")
-      ) {
+      if (!feedbackShown) {
 
-        status.textContent =
-          "🔇 I couldn't recognize the word. Please try again.";
+        if (heard.textContent) {
+
+          status.textContent =
+            "❌ I couldn't clearly recognize the word. Try again!";
+
+        } else {
+
+          status.textContent =
+            "🔇 No speech detected. Tap Try Again.";
+        }
       }
     };
 
@@ -323,10 +355,10 @@ if (!target) {
 
         recognition.start();
 
-      } catch (e) {
+      } catch (error) {
 
         status.textContent =
-          "⚠️ Please wait a moment, then tap Practice again.";
+          "⚠️ Please wait a moment, then try again.";
       }
     };
   }
